@@ -5,6 +5,12 @@ import { table } from 'table'
 
 type RouteConfig = Record<string, any>
 
+interface PluginOptions extends FastifyPluginOptions {
+  skipList?: (route: RouteOptions) => boolean
+  useColors?: boolean
+  compact?: boolean
+}
+
 const methodsOrder = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'PATCH', 'OPTIONS']
 
 function getRouteConfig(r: RouteOptions): RouteConfig {
@@ -117,11 +123,13 @@ export const plugin = fastifyPlugin(
   function (instance: FastifyInstance, options: FastifyPluginOptions, done: (error?: FastifyError) => void): void {
     const useColors: boolean = options.useColors ?? true
     const compact: boolean = options.compact ?? false
-
+    const skipList = options.skipList ?? null
+    
     const routes: RouteOptions[] = []
 
     // Utility to track all the RouteOptionss we add
     instance.addHook('onRoute', route => {
+      if( skipList && skipList(route) ) return;
       routes.push(route)
     })
 
